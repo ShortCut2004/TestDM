@@ -9,8 +9,9 @@ from services.pricing_service import calculate_cost_usd
 
 
 class OpenRouterClient:
-    def __init__(self) -> None:
+    def __init__(self, http_client: Optional[httpx.AsyncClient] = None) -> None:
         self.api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+        self._http_client = http_client
         
         # Validate API key is present and looks valid
         if not self.api_key:
@@ -27,6 +28,9 @@ class OpenRouterClient:
         self.max_retries = int(os.environ.get("OPENROUTER_MAX_RETRIES", "3"))
         self.retry_delay = float(os.environ.get("OPENROUTER_RETRY_DELAY", "1.0"))
         self.timeout = float(os.environ.get("OPENROUTER_TIMEOUT", "60.0"))  # 60 sec per attempt
+
+    def set_http_client(self, client: Optional[httpx.AsyncClient]) -> None:
+        self._http_client = client
 
     async def chat(
         self,
@@ -54,23 +58,26 @@ class OpenRouterClient:
             payload["max_tokens"] = max_tokens
 
         last_error: Optional[Exception] = None
-        
+        resp = None
+
+        timeout_config = httpx.Timeout(
+            connect=10.0,
+            read=self.timeout,
+            write=10.0,
+            pool=5.0,
+        )
+
+        async def _post_once() -> httpx.Response:
+            if self._http_client is not None:
+                return await self._http_client.post(url, headers=headers, json=payload)
+            async with httpx.AsyncClient(timeout=timeout_config) as client:
+                return await client.post(url, headers=headers, json=payload)
+
         for attempt in range(self.max_retries):
             try:
-                # Timeout config with generous limits for AI responses
-                timeout_config = httpx.Timeout(
-                    connect=10.0,
-                    read=self.timeout,
-                    write=10.0,
-                    pool=5.0
-                )
-                
-                async with httpx.AsyncClient(timeout=timeout_config) as client:
-                    resp = await client.post(url, headers=headers, json=payload)
-                
-                # If we get a response, break out of retry loop
+                resp = await _post_once()
                 break
-                
+
             except httpx.TimeoutException as e:
                 last_error = e
                 if attempt < self.max_retries - 1:
@@ -99,6 +106,9 @@ class OpenRouterClient:
             except Exception as e:
                 # For other errors, don't retry
                 raise RuntimeError(f"OpenRouter request failed: {str(e)}") from e
+
+        if resp is None:
+            raise RuntimeError("OpenRouter returned no response")
 
         try:
             data = resp.json()

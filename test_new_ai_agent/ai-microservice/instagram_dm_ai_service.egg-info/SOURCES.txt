@@ -1,7 +1,6 @@
 README.md
 pyproject.toml
 agents/__init__.py
-agents/consolidator_agent.py
 agents/dm_agent.py
 agents/gender_agent.py
 agents/training_agent.py

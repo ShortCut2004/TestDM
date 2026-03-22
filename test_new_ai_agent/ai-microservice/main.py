@@ -1,8 +1,12 @@
+import os
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
 
 # Load .env file from the ai-microservice directory
 load_dotenv()
 
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,10 +26,36 @@ from services.openrouter_client import OpenRouterClient
 from services.training_service import TrainingService
 from services.vector_store_service import VectorStoreService
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    read_timeout = float(os.environ.get("OPENROUTER_TIMEOUT", "60.0"))
+    timeout = httpx.Timeout(connect=10.0, read=read_timeout, write=10.0, pool=10.0)
+    # Shared client for OpenRouter; no custom Limits — use httpx defaults for the connection pool.
+    async with httpx.AsyncClient(timeout=timeout) as http_client:
+        openrouter_client = OpenRouterClient(http_client=http_client)
+        vector_service = VectorStoreService()
+
+        document_repository = DocumentRepository(vector_service)
+        training_repository = TrainingRepository(vector_service)
+
+        gender_agent = GenderAgent(openrouter_client)
+        dm_agent = DmAgent(vector_service, openrouter_client)
+        training_agent = TrainingAgent(openrouter_client)
+
+        app.state.vector_service = vector_service
+        app.state.document_service = DocumentService(document_repository)
+        app.state.training_service = TrainingService(training_agent, training_repository)
+        app.state.dm_service = DmService(gender_agent, dm_agent)
+
+        yield
+
+
 app = FastAPI(
     title="Instagram DM AI Service",
     description="AI-powered Instagram DM response automation with RAG",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -35,24 +65,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-async def startup_event():
-    openrouter_client = OpenRouterClient()
-    vector_service = VectorStoreService()
-
-    document_repository = DocumentRepository(vector_service)
-    training_repository = TrainingRepository(vector_service)
-
-    gender_agent = GenderAgent(openrouter_client)
-    dm_agent = DmAgent(vector_service, openrouter_client)
-    training_agent = TrainingAgent(openrouter_client)
-
-    app.state.vector_service = vector_service  # Expose for clients route
-    app.state.document_service = DocumentService(document_repository)
-    app.state.training_service = TrainingService(training_agent, training_repository)
-    app.state.dm_service = DmService(gender_agent, dm_agent)
 
 
 app.include_router(health_router)

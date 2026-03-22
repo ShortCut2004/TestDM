@@ -32,3 +32,15 @@ dist/
 
 # Ignore logs
 *.log
+
+data/*.db
+data/*.json
+*.db
+
+your_instagram_activity/
+
+*.mp4
+*.pdf
+instagram_training_dataset.txt
+inspect_ig.py
+process_ig_training.py

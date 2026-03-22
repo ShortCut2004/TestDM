@@ -17,67 +17,62 @@ class GenderAgent:
     # Hebrew feminine verb endings and words (נקבה - female speech patterns)
     FEMININE_MARKERS = {
         # Feminine verb conjugations (present tense - בינוני)
-        "הולכת", "רוצה", "יודעת", "חושבת", "מרגישה", "עושה", "אומרת", "רואה",
+        "הולכת", "יודעת", "חושבת", "מרגישה", "אומרת",
         "שומעת", "לוקחת", "נותנת", "באה", "יוצאת", "נכנסת", "קוראת", "כותבת",
         "אוכלת", "שותה", "ישנה", "קמה", "יושבת", "עומדת", "רצה", "צוחקת",
-        "בוכה", "שרה", "רוקדת", "משחקת", "לומדת", "עובדת", "נוסעת", "חוזרת",
-        "מדברת", "שואלת", "עונה", "מבינה", "זוכרת", "שוכחת", "מחפשת", "מוצאת",
-        "מתחילה", "מסיימת", "ממשיכה", "מפסיקה", "מנסה", "מצליחה", "נכשלת",
-        "מקווה", "מאמינה", "חוששת", "פוחדת", "אוהבת", "שונאת", "מעדיפה",
+        "שרה", "רוקדת", "משחקת", "לומדת", "עובדת", "נוסעת", "חוזרת",
+        "מדברת", "שואלת", "מבינה", "זוכרת", "שוכחת", "מחפשת", "מוצאת",
+        "מתחילה", "מסיימת", "ממשיכה", "מפסיקה", "מצליחה", "נכשלת",
+        "מאמינה", "חוששת", "פוחדת", "אוהבת", "שונאת", "מעדיפה",
         "בוחרת", "מחליטה", "מסכימה", "מתנגדת", "מבקשת", "דורשת", "צריכה",
-        "יכולה", "חייבת", "רוצה", "מעוניינת", "מתעניינת", "מתכננת", "מארגנת",
-        "מכינה", "מבשלת", "מנקה", "קונה", "מוכרת", "משלמת", "מקבלת", "שולחת",
-        "מזמינה", "מגיעה", "עוזבת", "נשארת", "ממתינה", "מחכה", "נהנית", "סובלת",
+        "יכולה", "חייבת", "מעוניינת", "מתעניינת", "מתכננת", "מארגנת",
+        "מכינה", "מבשלת", "מוכרת", "משלמת", "מקבלת", "שולחת",
+        "מזמינה", "מגיעה", "עוזבת", "נשארת", "ממתינה", "נהנית", "סובלת",
         
         # Feminine adjectives (תארים בנקבה)
         "עייפה", "רעבה", "צמאה", "שמחה", "עצובה", "כועסת", "מאושרת", "מתוסכלת",
         "מבולבלת", "מופתעת", "מודאגת", "לחוצה", "רגועה", "עסוקה", "פנויה",
-        "מוכנה", "בטוחה", "מסופקת", "מאוכזבת", "נרגשת", "מרוצה", "מעוצבנת",
-        "חולה", "בריאה", "חזקה", "חלשה", "גבוהה", "נמוכה", "רזה", "שמנה",
-        "יפה", "חכמה", "טיפשה", "זקנה", "צעירה", "חדשה", "ישנה", "טובה", "רעה",
-        "גדולה", "קטנה", "ראשונה", "אחרונה", "יחידה", "לבד", "ביישנית", "חברותית",
+        "מוכנה", "בטוחה", "מסופקת", "מאוכזבת", "נרגשת", "מעוצבנת",
+        "בריאה", "חזקה", "חלשה", "גבוהה", "נמוכה", "שמנה",
+        "חכמה", "טיפשה", "זקנה", "צעירה", "חדשה", "ישנה", "טובה", "רעה",
+        "גדולה", "קטנה", "ראשונה", "אחרונה", "יחידה", "ביישנית", "חברותית",
         "סקרנית", "זהירה", "אמיצה", "פחדנית", "אופטימית", "פסימית",
         
         # Explicit feminine self-references
         "אני בת", "אני אישה", "אני בחורה", "אני נערה", "אני גברת",
         "בתור אישה", "בתור בת", "בתור בחורה", "כאישה", "כבת", "כבחורה",
         
-        # Feminine past tense patterns (עבר נקבה)
-        "הלכתי", "רציתי", "ידעתי", "חשבתי", "הרגשתי", "עשיתי", "אמרתי", "ראיתי",
-        # Note: Past tense 1st person is actually gender-neutral in Hebrew,
-        # but we include common ones that appear in feminine context
-        
         # Feminine imperative addressed to speaker (suggesting they're female)
         "תבואי", "תעשי", "תגידי", "תראי", "תשמעי", "תלכי", "תקחי", "תתני",
         
         # Common feminine expressions
-        "לא יודעת", "לא מבינה", "לא זוכרת", "לא רוצה", "לא יכולה", "לא צריכה",
-        "אני מעוניינת", "אני מתעניינת", "אני מחפשת", "אני רוצה", "אני צריכה",
-        "אני חושבת", "אני מרגישה", "אני מאמינה", "אני מקווה", "אני בטוחה",
+        "לא יודעת", "לא מבינה", "לא זוכרת", "לא יכולה", "לא צריכה",
+        "אני מעוניינת", "אני מתעניינת", "אני מחפשת", "אני צריכה",
+        "אני חושבת", "אני מרגישה", "אני מאמינה", "אני בטוחה",
     }
     
     # Hebrew masculine verb endings and words (זכר - male speech patterns)
     MASCULINE_MARKERS = {
         # Masculine verb conjugations (present tense - בינוני)
-        "הולך", "רוצה", "יודע", "חושב", "מרגיש", "עושה", "אומר", "רואה",
+        "הולך", "יודע", "חושב", "מרגיש", "אומר",
         "שומע", "לוקח", "נותן", "בא", "יוצא", "נכנס", "קורא", "כותב",
         "אוכל", "שותה", "ישן", "קם", "יושב", "עומד", "רץ", "צוחק",
-        "בוכה", "שר", "רוקד", "משחק", "לומד", "עובד", "נוסע", "חוזר",
-        "מדבר", "שואל", "עונה", "מבין", "זוכר", "שוכח", "מחפש", "מוצא",
-        "מתחיל", "מסיים", "ממשיך", "מפסיק", "מנסה", "מצליח", "נכשל",
-        "מקווה", "מאמין", "חושש", "פוחד", "אוהב", "שונא", "מעדיף",
+        "שר", "רוקד", "משחק", "לומד", "עובד", "נוסע", "חוזר",
+        "מדבר", "שואל", "מבין", "זוכר", "שוכח", "מחפש", "מוצא",
+        "מתחיל", "מסיים", "ממשיך", "מפסיק", "מצליח", "נכשל",
+        "מאמין", "חושש", "פוחד", "אוהב", "שונא", "מעדיף",
         "בוחר", "מחליט", "מסכים", "מתנגד", "מבקש", "דורש", "צריך",
-        "יכול", "חייב", "רוצה", "מעוניין", "מתעניין", "מתכנן", "מארגן",
-        "מכין", "מבשל", "מנקה", "קונה", "מוכר", "משלם", "מקבל", "שולח",
-        "מזמין", "מגיע", "עוזב", "נשאר", "ממתין", "מחכה", "נהנה", "סובל",
+        "יכול", "חייב", "מעוניין", "מתעניין", "מתכנן", "מארגן",
+        "מכין", "מבשל", "מוכר", "משלם", "מקבל", "שולח",
+        "מזמין", "מגיע", "עוזב", "נשאר", "ממתין", "נהנה", "סובל",
         
         # Masculine adjectives (תארים בזכר)
         "עייף", "רעב", "צמא", "שמח", "עצוב", "כועס", "מאושר", "מתוסכל",
         "מבולבל", "מופתע", "מודאג", "לחוץ", "רגוע", "עסוק", "פנוי",
-        "מוכן", "בטוח", "מסופק", "מאוכזב", "נרגש", "מרוצה", "מעוצבן",
-        "חולה", "בריא", "חזק", "חלש", "גבוה", "נמוך", "רזה", "שמן",
-        "יפה", "חכם", "טיפש", "זקן", "צעיר", "חדש", "ישן", "טוב", "רע",
-        "גדול", "קטן", "ראשון", "אחרון", "יחיד", "לבד", "ביישן", "חברותי",
+        "מוכן", "בטוח", "מסופק", "מאוכזב", "נרגש", "מעוצבן",
+        "בריא", "חזק", "חלש", "גבוה", "נמוך", "שמן",
+        "חכם", "טיפש", "זקן", "צעיר", "חדש", "ישן", "טוב", "רע",
+        "גדול", "קטן", "ראשון", "אחרון", "יחיד", "ביישן", "חברותי",
         "סקרן", "זהיר", "אמיץ", "פחדן", "אופטימי", "פסימי",
         
         # Explicit masculine self-references
@@ -88,15 +83,21 @@ class GenderAgent:
         "תבוא", "תעשה", "תגיד", "תראה", "תשמע", "תלך", "תקח", "תתן",
         
         # Common masculine expressions
-        "לא יודע", "לא מבין", "לא זוכר", "לא רוצה", "לא יכול", "לא צריך",
-        "אני מעוניין", "אני מתעניין", "אני מחפש", "אני רוצה", "אני צריך",
-        "אני חושב", "אני מרגיש", "אני מאמין", "אני מקווה", "אני בטוח",
+        "לא יודע", "לא מבין", "לא זוכר", "לא יכול", "לא צריך",
+        "אני מעוניין", "אני מתעניין", "אני מחפש", "אני צריך",
+        "אני חושב", "אני מרגיש", "אני מאמין", "אני בטוח",
     }
     
     # Words that are identical in both genders (to avoid false positives)
     GENDER_NEUTRAL_WORDS = {
-        "רוצה", "עושה", "אוהב", "אוהבת",  # Some words need context
+        "רוצה", "עושה", "מקנה", "קונה", "מנסה", "מקווה", "מחכה", "מרוצה", "חולה", "רזה", "יפה", "לבד", "לא רוצה", "לא קונה", "לא מנסה", "לא מקווה", "לא מחכה", "לא מרוצה", "לא חולה", "לא רזה", "לא יפה", "לא לבד",   # Some words need context
     }
+
+    # Hebrew 1st-person past (אני Xתי) is gender-neutral — never use for rules/LLM hints
+    GENDER_NEUTRAL_FIRST_PERSON_PAST = frozenset({
+        "הלכתי", "רציתי", "ידעתי", "חשבתי", "הרגשתי", "עשיתי", "אמרתי", "ראיתי",
+        "ביקשתי", "שאלתי", "עניתי", "כתבתי", "שלחתי", "קניתי", "מכרתי",
+    })
 
     def __init__(self, openrouter_client: OpenRouterClient):
         self.client = openrouter_client
@@ -131,10 +132,16 @@ class GenderAgent:
         
         # Find all matches
         for match in self._feminine_pattern.finditer(text):
-            feminine_matches.add(match.group(1))
+            w = match.group(1)
+            if w in self.GENDER_NEUTRAL_FIRST_PERSON_PAST:
+                continue
+            feminine_matches.add(w)
         
         for match in self._masculine_pattern.finditer(text):
-            masculine_matches.add(match.group(1))
+            w = match.group(1)
+            if w in self.GENDER_NEUTRAL_FIRST_PERSON_PAST:
+                continue
+            masculine_matches.add(w)
         
         # Remove matches that appear in both (ambiguous words like "רוצה")
         # Only keep unique gender-specific markers
@@ -238,10 +245,7 @@ class GenderAgent:
         masculine_count = marker_analysis["masculine_count"]
         feminine_signals = marker_analysis["feminine_signals"]
         masculine_signals = marker_analysis["masculine_signals"]
-        
-        # Step 2: Determine if rule-based classification is sufficient
-        total_markers = feminine_count + masculine_count
-        
+
         # Clear female signal: feminine markers dominate
         if feminine_count >= 2 and feminine_count > masculine_count * 2:
             confidence = min(0.95, 0.7 + (feminine_count - masculine_count) * 0.05)
@@ -295,8 +299,9 @@ class GenderAgent:
 - ביטויים: "אני בן", "אני גבר", "לא יודע", "אני מתעניין", "אני חושב ש..."
 
 כללים:
-- אם יש סימנים ברורים לנקבה (פעלים/תארים בנקבה) — החזר female.
-- אם יש סימנים ברורים לזכר (פעלים/תארים בזכר) — החזר male.
+- אסור לסווג לפי עבר של גוף ראשון (רציתי, חשבתי, הלכתי, ידעתי וכו') — אלה ניטרליים בדרך כלל בעברית ואינם מעידים על מגדר הדובר.
+- אם יש סימנים ברורים לנקבה (פעלים/תארים בנקבה בהווה, או ביטוי מפורש כמו "אני בת") — החזר female.
+- אם יש סימנים ברורים לזכר (פעלים/תארים בזכר בהווה, או ביטוי מפורש כמו "אני בן") — החזר male.
 - אל תנחש לפי שמות לא מוכרים.
 - אם יש רק שם באנגלית בלי הקשר מגדרי — החזר "unknown".
 - אם יש גם רמזים לזכר וגם רמזים לנקבה — החזר "unknown".
@@ -350,28 +355,28 @@ class GenderAgent:
         parsed = self._extract_json(raw)
 
         if not parsed:
-            # If LLM fails but we have some marker signals, use them
-            if feminine_count > masculine_count and feminine_count >= 1:
+            # Only use rule fallback when markers are as strong as rule_based branch (avoid weak guesses)
+            if feminine_count >= 2 and feminine_count > masculine_count * 2:
                 return {
                     "gender": "female",
-                    "confidence": 0.6,
-                    "signals": feminine_signals[:3] if feminine_signals else ["weak_feminine_markers"],
+                    "confidence": 0.55,
+                    "signals": feminine_signals[:3] if feminine_signals else ["fallback_feminine_markers"],
                     "usage": result.get("usage"),
                     "threshold": self.threshold,
                     "method": "fallback_rule_based",
                     "marker_analysis": marker_analysis,
                 }
-            elif masculine_count > feminine_count and masculine_count >= 1:
+            if masculine_count >= 2 and masculine_count > feminine_count * 2:
                 return {
                     "gender": "male",
-                    "confidence": 0.6,
-                    "signals": masculine_signals[:3] if masculine_signals else ["weak_masculine_markers"],
+                    "confidence": 0.55,
+                    "signals": masculine_signals[:3] if masculine_signals else ["fallback_masculine_markers"],
                     "usage": result.get("usage"),
                     "threshold": self.threshold,
                     "method": "fallback_rule_based",
                     "marker_analysis": marker_analysis,
                 }
-            
+
             return {
                 "gender": "unknown",
                 "confidence": 0.0,

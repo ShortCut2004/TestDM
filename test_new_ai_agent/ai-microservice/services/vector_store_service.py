@@ -1,5 +1,6 @@
+import asyncio
 import os
-from typing import BinaryIO, Optional, List
+from typing import BinaryIO, List, Optional
 
 from utils.markdown_parser import (
     parse_markdown_sections,
@@ -63,6 +64,12 @@ class VectorStoreService:
         """Check if vector store is properly configured and enabled."""
         return self._enabled
 
+    async def _embed_query_async(self, text: str) -> list:
+        """Run sync LangChain embed_query in a thread pool so concurrent /dm requests don't block the event loop."""
+        if not self.embeddings:
+            raise RuntimeError("Embeddings not configured")
+        return await asyncio.to_thread(self.embeddings.embed_query, text)
+
     async def process_and_store_markdown(
         self,
         md_content: BinaryIO,
@@ -117,7 +124,7 @@ class VectorStoreService:
         vectors_to_upsert = []
 
         for section in parsed_doc.sections:
-            embedding = self.embeddings.embed_query(section.content)
+            embedding = await self._embed_query_async(section.content)
             chunk_id = f"{document_id}_chunk_{section.chunk_index}"
 
             # Use filename-based section type as primary, fall back to heading-based
@@ -195,7 +202,7 @@ class VectorStoreService:
         if not self._enabled or not self.index or not self.embeddings:
             return []
 
-        query_embedding = self.embeddings.embed_query(query)
+        query_embedding = await self._embed_query_async(query)
 
         # Build filter if section_type is specified
         filter_str = None
@@ -395,7 +402,7 @@ class VectorStoreService:
         
         # Create a simple marker embedding for the namespace initialization
         marker_text = f"Client namespace initialized for {client_name or business_name or client_id}"
-        marker_embedding = self.embeddings.embed_query(marker_text)
+        marker_embedding = await self._embed_query_async(marker_text)
         
         marker_vector = Vector(
             id=f"{client_id}_namespace_marker",

@@ -809,6 +809,14 @@ ${justConnected ? '<div style="background:#166534;color:#86efac;padding:10px 20p
             </div>
           </div>
           <div id="knowledgeFilesList" style="margin-top:16px"></div>
+          <div id="knowledgeConfirmPanel" style="display:none;margin-top:16px;padding:16px;background:#161616;border:1px solid rgba(255,255,255,0.08);border-radius:8px">
+            <div style="font-size:13px;font-weight:600;color:#ccc;margin-bottom:8px">לאשר העלאה?</div>
+            <div id="knowledgeConfirmFileList" style="font-size:12px;color:#888;margin-bottom:12px;max-height:160px;overflow-y:auto"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button type="button" onclick="confirmKnowledgeUpload()" style="padding:10px 18px;background:#fff;color:#000;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">אשר העלאה</button>
+              <button type="button" onclick="cancelKnowledgeUpload()" style="padding:10px 18px;background:#1a1a1a;color:#ccc;border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:14px;cursor:pointer">ביטול</button>
+            </div>
+          </div>
           <div id="knowledgeUploadResults" style="margin-top:12px;display:none"></div>
         </div>
       </div>
@@ -1857,18 +1865,67 @@ async function saveSystemPrompt() {
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
+    const saved = (data.tenant && data.tenant.systemPrompt !== undefined) ? String(data.tenant.systemPrompt) : value;
+    const len = saved.length;
     const msg = document.getElementById('saveMsgSystemPrompt');
     if (msg) {
+      msg.textContent = 'נשמר בשרת · ' + len + ' תווים';
       msg.classList.add('show');
-      setTimeout(() => msg.classList.remove('show'), 2000);
+      setTimeout(function() {
+        msg.classList.remove('show');
+        msg.textContent = 'נשמר!';
+      }, 3500);
     }
   } catch (e) { alert('שגיאה: ' + e.message); }
 }
 
-// --- Knowledge Base Upload ---
-const AI_SERVICE_URL = '${config.aiServiceUrl || 'http://localhost:8000'}';
+// --- Knowledge Base Upload (proxied via /api/app/ai/* — same tenant namespace as DM/RAG) ---
+function formatKbFileSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
 
-async function handleKnowledgeFiles(input) {
+function handleKnowledgeFiles(input) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+
+  const arr = Array.from(files);
+  const nonMd = arr.filter(function(f) { return !f.name.toLowerCase().endsWith('.md'); });
+  if (nonMd.length) {
+    alert('ניתן להעלות רק קבצי Markdown (.md)');
+    input.value = '';
+    return;
+  }
+
+  const panel = document.getElementById('knowledgeConfirmPanel');
+  const listEl = document.getElementById('knowledgeConfirmFileList');
+  if (!panel || !listEl) return;
+
+  let html = '';
+  for (let i = 0; i < arr.length; i++) {
+    html += '<div style="padding:4px 0">' + escapeHtmlJS(arr[i].name) + ' <span style="color:#555">(' + formatKbFileSize(arr[i].size) + ')</span></div>';
+  }
+  listEl.innerHTML = html;
+  panel.style.display = 'block';
+}
+
+function cancelKnowledgeUpload() {
+  const panel = document.getElementById('knowledgeConfirmPanel');
+  if (panel) panel.style.display = 'none';
+  const input = document.getElementById('knowledgeFilesInput');
+  if (input) input.value = '';
+}
+
+async function confirmKnowledgeUpload() {
+  const input = document.getElementById('knowledgeFilesInput');
+  if (!input || !input.files || input.files.length === 0) return;
+  const panel = document.getElementById('knowledgeConfirmPanel');
+  if (panel) panel.style.display = 'none';
+  await executeKnowledgeUpload(input);
+}
+
+async function executeKnowledgeUpload(input) {
   const files = input.files;
   if (!files || files.length === 0) return;
 
@@ -1878,7 +1935,6 @@ async function handleKnowledgeFiles(input) {
   const progressBar = document.getElementById('knowledgeProgressBar');
   const resultsDiv = document.getElementById('knowledgeUploadResults');
 
-  // Show progress UI
   if (uploadUI) uploadUI.style.display = 'none';
   if (progressUI) progressUI.style.display = 'block';
   if (progressText) progressText.textContent = 'מכין קבצים להעלאה...';
@@ -1887,8 +1943,6 @@ async function handleKnowledgeFiles(input) {
 
   try {
     const formData = new FormData();
-    formData.append('client_id', 'tenant_' + TENANT_ID);
-    
     for (let i = 0; i < files.length; i++) {
       formData.append('files', files[i]);
     }
@@ -1896,31 +1950,31 @@ async function handleKnowledgeFiles(input) {
     if (progressText) progressText.textContent = 'מעלה ' + files.length + ' קבצים...';
     if (progressBar) progressBar.style.width = '30%';
 
-    const res = await fetch(AI_SERVICE_URL + '/documents/upload-multiple', {
+    const res = await fetch('/api/app/ai/documents/upload-multiple', {
       method: 'POST',
+      credentials: 'same-origin',
       body: formData
     });
 
     if (progressBar) progressBar.style.width = '80%';
 
-    const data = await res.json();
+    const data = await res.json().catch(function() { return {}; });
 
     if (progressBar) progressBar.style.width = '100%';
-    
+
     if (!res.ok) {
-      throw new Error(data.detail || 'Upload failed');
+      throw new Error(data.error || data.detail || 'Upload failed');
     }
 
-    // Show results
-    setTimeout(() => {
+    setTimeout(function() {
       if (uploadUI) uploadUI.style.display = 'block';
       if (progressUI) progressUI.style.display = 'none';
-      
+
       if (resultsDiv) {
         resultsDiv.style.display = 'block';
         let html = '<div style="padding:12px;background:#161616;border:1px solid rgba(255,255,255,0.08);border-radius:8px">';
-        html += '<div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:8px">' + data.message + '</div>';
-        
+        html += '<div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:8px">' + escapeHtmlJS(data.message || 'העלאה הושלמה') + '</div>';
+
         if (data.results && data.results.length > 0) {
           html += '<div style="font-size:12px;color:#888">';
           data.results.forEach(function(r) {
@@ -1934,13 +1988,9 @@ async function handleKnowledgeFiles(input) {
         resultsDiv.innerHTML = html;
       }
 
-      // Clear the file input
       input.value = '';
-
-      // Refresh documents list
       loadKnowledgeDocuments();
     }, 500);
-
   } catch (e) {
     if (uploadUI) uploadUI.style.display = 'block';
     if (progressUI) progressUI.style.display = 'none';
@@ -1954,7 +2004,7 @@ async function loadKnowledgeDocuments() {
   if (!listDiv) return;
 
   try {
-    const res = await fetch(AI_SERVICE_URL + '/documents/tenant_' + TENANT_ID + '/list');
+    const res = await fetch('/api/app/ai/documents', { credentials: 'same-origin' });
     if (!res.ok) {
       listDiv.innerHTML = '<div style="color:#555;font-size:13px">לא ניתן לטעון את רשימת הקבצים</div>';
       return;
@@ -1987,20 +2037,16 @@ async function loadKnowledgeDocuments() {
 
 async function deleteKnowledgeDocument(filename) {
   if (!confirm('האם למחוק את הקובץ הזה?')) return;
-  
+
   try {
-    const res = await fetch(AI_SERVICE_URL + '/documents/tenant_' + TENANT_ID + '/' + encodeURIComponent(filename), {
-      method: 'DELETE'
+    const res = await fetch('/api/app/ai/documents/file/' + encodeURIComponent(filename), {
+      method: 'DELETE',
+      credentials: 'same-origin'
     });
     if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.detail || 'Delete failed');
+      const data = await res.json().catch(function() { return {}; });
+      throw new Error(data.error || data.detail || 'Delete failed');
     }
-    loadKnowledgeDocuments();
-  } catch (e) {
-    alert('שגיאה במחיקת הקובץ: ' + e.message);
-  }
-}
     loadKnowledgeDocuments();
   } catch (e) {
     alert('שגיאה במחיקת הקובץ: ' + e.message);

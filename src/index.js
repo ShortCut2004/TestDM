@@ -283,7 +283,7 @@ const lastSentMessage = new Map();
 const pingPongTracker = new Map();
 
 // Seed test tenant on startup
-seedTestTenant();
+seedTestTenant().catch(err => console.warn('Seed test tenant warning (non-fatal):', err.message));
 
 // ============================================
 // Health check
@@ -752,6 +752,10 @@ app.get('/api/app/settings', authMiddleware, async (req, res) => {
     triggerWords: tenant.triggerWords || [],
     conversationStrategy: tenant.conversationStrategy || null,
     delayConfig: tenant.delayConfig || null,
+    systemPrompt: tenant.systemPrompt || '',
+    maxBotMessages: tenant.maxBotMessages ?? null,
+    aiTemperature: tenant.aiTemperature ?? null,
+    aiEnabled: tenant.aiEnabled === true,
   });
 });
 
@@ -989,10 +993,10 @@ function getAiServiceBaseUrl() {
   return (config.aiServiceUrl || 'http://localhost:8000').replace(/\/$/, '');
 }
 
-async function fetchAiService(path, init = {}) {
+async function fetchAiService(path, init = {}, timeoutMs = 25000) {
   const url = `${getAiServiceBaseUrl()}${path.startsWith('/') ? '' : '/'}${path}`;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 25000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, { ...init, signal: controller.signal });
     if (!res.ok) {
@@ -1045,6 +1049,48 @@ app.delete('/api/app/ai/documents', authMiddleware, async (req, res) => {
     res.json(data);
   } catch (err) {
     safeError(res, err, 'AI documents delete');
+  }
+});
+
+// Upload multiple Markdown files (same namespace as /dm/respond — raw tenant id)
+app.post('/api/app/ai/documents/upload-multiple', authMiddleware, upload.array('files', 30), async (req, res) => {
+  try {
+    const files = req.files;
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ error: 'At least one file is required' });
+    }
+
+    const form = new FormData();
+    form.append('client_id', req.tenantId);
+    for (const f of files) {
+      form.append(
+        'files',
+        new Blob([f.buffer], { type: f.mimetype || 'application/octet-stream' }),
+        f.originalname
+      );
+    }
+
+    const data = await fetchAiService('/documents/upload-multiple', { method: 'POST', body: form }, 120000);
+    res.json(data);
+  } catch (err) {
+    safeError(res, err, 'AI documents upload-multiple');
+  }
+});
+
+// Delete one Markdown document by filename (microservice proxy)
+app.delete('/api/app/ai/documents/file/:filename', authMiddleware, async (req, res) => {
+  try {
+    const filename = decodeURIComponent(req.params.filename);
+    if (!filename || !filename.trim()) {
+      return res.status(400).json({ error: 'filename is required' });
+    }
+    const data = await fetchAiService(
+      `/documents/${encodeURIComponent(req.tenantId)}/${encodeURIComponent(filename)}`,
+      { method: 'DELETE' }
+    );
+    res.json(data);
+  } catch (err) {
+    safeError(res, err, 'AI document delete file');
   }
 });
 
