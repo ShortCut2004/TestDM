@@ -645,7 +645,7 @@ app.post('/api/app/chat/reset', authMiddleware, async (req, res) => {
 
 // API: Update tenant settings
 app.post('/api/app/settings', authMiddleware, async (req, res) => {
-  const allowed = ['name', 'businessType', 'services', 'ownerName', 'workingHours', 'bookingInstructions', 'customFirstReply', 'slangWords', 'websiteLinks', 'botActive', 'voiceGreeting', 'voiceEnergy', 'voicePhrases', 'voicePhrasesMale', 'voicePhrasesFemale', 'voiceEmoji', 'voiceLength', 'voiceHumor', 'voiceExamples', 'voiceAvoid', 'voicePersonality', 'aiTemperature', 'botGender', 'customFlowInstructions', 'ignoreList', 'ctaPushLevel', 'ctaType', 'ownerPhone', 'ctaCustomText', 'triggerWords', 'conversationStrategy', 'delayConfig', 'botGoal', 'maxBotMessages', 'systemPrompt'];
+  const allowed = ['name', 'businessType', 'services', 'ownerName', 'workingHours', 'bookingInstructions', 'customFirstReply', 'slangWords', 'websiteLinks', 'botActive', 'voiceGreeting', 'voiceEnergy', 'voicePhrases', 'voicePhrasesMale', 'voicePhrasesFemale', 'voiceEmoji', 'voiceLength', 'voiceHumor', 'voiceExamples', 'voiceAvoid', 'voicePersonality', 'aiTemperature', 'botGender', 'customFlowInstructions', 'ignoreList', 'ctaPushLevel', 'ctaType', 'ownerPhone', 'ctaCustomText', 'triggerWords', 'conversationStrategy', 'delayConfig', 'botGoal', 'maxBotMessages', 'systemPrompt', 'aiEnabled'];
   if (req.body.customFlowInstructions !== undefined && req.body.customFlowInstructions.length > 5000) {
     return res.status(400).json({ error: 'Custom flow instructions too long (max 5000 chars)' });
   }
@@ -1926,6 +1926,12 @@ async function processWebhook(body) {
   // Check if bot is turned off for this tenant
   if (tenant.botActive === false) {
     console.log(`[${tenant.name}] Bot is OFF — ignoring message from ${senderId}`);
+    return;
+  }
+
+  // Check if AI service is disabled for this tenant
+  if (tenant.aiEnabled === false) {
+    console.log(`[${tenant.name}] AI service is DISABLED — ignoring message from ${senderId}`);
     return;
   }
 

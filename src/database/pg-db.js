@@ -118,6 +118,13 @@ try {
   console.warn('System prompt migration warning (non-fatal):', e.message);
 }
 
+// --- AI service enable/disable toggle (default OFF - user must explicitly enable) ---
+try {
+  await query("ALTER TABLE tenants ADD COLUMN IF NOT EXISTS ai_enabled BOOLEAN DEFAULT false");
+} catch (e) {
+  console.warn('AI enabled migration warning (non-fatal):', e.message);
+}
+
 // --- RAG: embedding columns ---
 try {
   await query("ALTER TABLE knowledge_base ADD COLUMN IF NOT EXISTS embedding JSONB");
@@ -431,10 +438,11 @@ function rowToTenant(row) {
     subscriptionEndsAt: row.subscription_ends_at?.toISOString?.() || row.subscription_ends_at || null,
     billingModel: row.billing_model || 'flat',
     pricePerConversation: row.price_per_conversation != null ? parseFloat(row.price_per_conversation) : 0,
-    systemPrompt: row.system_prompt || '',
+systemPrompt: row.system_prompt || '',
+    aiEnabled: row.ai_enabled || false,
     createdAt: row.created_at?.toISOString?.() || row.created_at,
   };
-}
+  }
 
 // Map camelCase field names to snake_case column names
 const TENANT_FIELD_MAP = {
@@ -490,9 +498,10 @@ const TENANT_FIELD_MAP = {
   subscriptionEndsAt: 'subscription_ends_at',
   billingModel: 'billing_model',
   pricePerConversation: 'price_per_conversation',
-  systemPrompt: 'system_prompt',
+systemPrompt: 'system_prompt',
+  aiEnabled: 'ai_enabled',
 };
-
+  
 export async function getTenant(id) {
   const result = await query('SELECT * FROM tenants WHERE id = $1', [id]);
   return rowToTenant(result.rows[0]) || null;

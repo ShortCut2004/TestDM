@@ -37,6 +37,10 @@ export function loadConfig() {
     gradingEnabled: process.env.GRADING_ENABLED !== 'false',
     goldenInjectionEnabled: process.env.GOLDEN_INJECTION_ENABLED !== 'false',
     promptVersion: process.env.PROMPT_VERSION || 'v1',
+    // Business owner notification Instagram credentials
+    // Used to notify the business owner when AI is not confident in answering
+    notificationIgUserId: process.env.NOTIFICATION_IG_USER_ID || '',
+    notificationIgAccessToken: process.env.NOTIFICATION_IG_ACCESS_TOKEN || '',
   };
 
   // SECURITY: Crash in production if critical secrets are missing or set to defaults

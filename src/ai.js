@@ -2,8 +2,31 @@ import { getConversationHistory, saveMessage, getOrCreateLead, updateLead, recor
 
 import { classifyEntry, resolveConversationMode, CONVERSATION_MODES } from './sequence.js';
 import { config } from './config.js';
+import { sendInstagramMessage } from './instagram.js';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+// Not confident phrase detection
+const NOT_CONFIDENT_PHRASE = 'not confident in answering';
+
+// Send notification to business owner via Instagram when AI is not confident
+async function sendNotConfidentNotification(leadUsername) {
+  if (!config.notificationIgAccessToken || !config.notificationIgUserId) {
+    console.warn('[Notification] No notification IG credentials configured — skipping notification');
+    return false;
+  }
+  
+  const message = `צריך לחזור ל${leadUsername ? '@' + leadUsername : 'ליד'}`;
+  
+  try {
+    await sendInstagramMessage(config.notificationIgAccessToken, config.notificationIgUserId, message);
+    console.log(`[Notification] Sent "not confident" notification for ${leadUsername || 'unknown lead'}`);
+    return true;
+  } catch (err) {
+    console.error(`[Notification] Failed to send notification: ${err.message}`);
+    return false;
+  }
+}
 
 // Robust JSON extraction from AI responses (handles ```json blocks, truncated responses, etc.)
 function parseAIJson(raw) {
@@ -700,6 +723,16 @@ export async function generateReply(tenant, userId, userMessage, wasConsolidated
       // Don't send any message - better to be silent than reveal we're a bot
       if (!rawReply) {
         console.warn(`[${tenant.id}] Microservice returned no response for ${userId} — staying silent`);
+        return null;
+      }
+      
+      // Check for "not confident in answering" response
+      // Send notification to business owner instead of AI response
+      if (rawReply && rawReply.toLowerCase().includes(NOT_CONFIDENT_PHRASE)) {
+        console.log(`[${tenant.id}] AI not confident for ${userId} — sending notification to owner`);
+        const leadUsername = lead?.instagramUsername || lead?.instagramName || null;
+        await sendNotConfidentNotification(leadUsername);
+        // Don't send the AI response to the user - stay silent
         return null;
       }
     } else {
