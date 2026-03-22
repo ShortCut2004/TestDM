@@ -1,0 +1,12 @@
+export { getLoginHTML } from './login.js';
+export { getSignupHTML } from './signup.js';
+export { getAppHTML } from './app.js';
+export { getChatHTML } from './chat.js';
+export { getDashboardHTML } from './dashboard.js';
+export { getTeachHTML } from './teach.js';
+export { getAdminHTML } from './admin.js';
+export { getDemoHTML } from './demo.js';
+export { getErrorPageHTML } from './error.js';
+export { getMasterAdminHTML } from './master.js';
+export { getWizardHTML } from './wizard.js';
+export { escapeHtml } from './utils.js';

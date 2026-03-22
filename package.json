@@ -1,0 +1,21 @@
+{
+  "name": "hebrew-ig-appointment-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "@polar-sh/sdk": "^0.46.3",
+    "axios": "^1.7.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "express-rate-limit": "^8.3.0",
+    "helmet": "^8.1.0",
+    "multer": "^2.1.1",
+    "pg": "^8.20.0"
+  }
+}

@@ -1,0 +1,3 @@
+export function getErrorPageHTML(title, subtitle) {
+  return '<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>שגיאה</title><style>body{font-family:sans-serif;background:#0a0a0a;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh}.card{text-align:center;padding:40px;background:#111;border:1px solid #222;border-radius:16px;max-width:400px}h2{color:#f87171;margin-bottom:12px}p{color:#888;line-height:1.6;margin-bottom:20px}a{color:#3b82f6;text-decoration:none}</style></head><body><div class="card"><h2>' + (title || 'שגיאה') + '</h2><p>' + (subtitle || 'משהו השתבש. נסה/י שוב.') + '</p><a href="/onboard">← חזרה</a></div></body></html>';
+}

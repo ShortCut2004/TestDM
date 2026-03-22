@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6C5CE7;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#A855F7;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F97316;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#FBBF24;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="1024" height="1024" rx="220" ry="220" fill="url(#bg)"/>
+  <!-- Chat bubble -->
+  <path d="M280 300 h464 a60 60 0 0 1 60 60 v280 a60 60 0 0 1 -60 60 H520 l-120 100 v-100 H280 a60 60 0 0 1 -60-60 V360 a60 60 0 0 1 60-60z" fill="white" opacity="0.95"/>
+  <!-- AI sparkle/bolt icon inside bubble -->
+  <path d="M460 380 l-60 120 h60 l-30 100 120-140 h-70 l50-80z" fill="url(#accent)" stroke="url(#accent)" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Small dots representing typing/conversation -->
+  <circle cx="580" cy="490" r="18" fill="#6C5CE7" opacity="0.5"/>
+  <circle cx="630" cy="490" r="18" fill="#6C5CE7" opacity="0.35"/>
+  <circle cx="680" cy="490" r="18" fill="#6C5CE7" opacity="0.2"/>
+</svg>

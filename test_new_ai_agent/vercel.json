@@ -1,0 +1,8 @@
+{
+  "experimentalServices": {
+    "ai-microservice": {
+      "entrypoint": "ai-microservice/main.py",
+      "routePrefix": "/api"
+    }
+  }
+}
