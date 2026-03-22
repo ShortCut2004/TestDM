@@ -556,7 +556,7 @@ ${justConnected ? '<div style="background:#166534;color:#86efac;padding:10px 20p
               </div>
             </div>
           </div>
-          <p style="font-size:11px;color:#555;margin-top:10px;direction:rtl">ההשהיות חלות רק על ש��חות אינסטגרם אמיתיות, לא על הצ׳אט הפנימי</p>
+          <p style="font-size:11px;color:#555;margin-top:10px;direction:rtl">ההשהיות ��לות רק על ש��חות אינסטגרם אמיתיות, לא על הצ׳אט הפנימי</p>
         </div>
       </div>
 
@@ -697,6 +697,17 @@ ${justConnected ? '<div style="background:#166534;color:#86efac;padding:10px 20p
               </label>
               <span style="font-size:14px;color:#ccc">${t.botActive !== false ? 'הבוט פעיל ומגיב להודעות' : 'הבוט כבוי'}</span>
             </div>
+          </div>
+          <div style="margin-top:16px">
+            <label style="color:#ccc;font-size:14px;margin-bottom:8px;display:block">שירות AI</label>
+            <div style="display:flex;align-items:center;gap:12px">
+              <label class="switch" style="position:relative;display:inline-block;width:44px;height:24px;">
+                <input type="checkbox" id="aiToggleSettings" ${t.aiEnabled ? 'checked' : ''} onchange="toggleAI(this.checked)">
+                <span class="slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:${t.aiEnabled ? '#3b82f6' : '#333'};transition:.3s;border-radius:24px;"></span>
+              </label>
+              <span id="aiStatusText" style="font-size:14px;color:#ccc">${t.aiEnabled ? 'שירות AI פעיל' : 'שירות AI כבוי'}</span>
+            </div>
+            <p style="margin-top:8px;font-size:12px;color:#666">כאשר שירות AI כבוי, הבוט לא יגיב להודעות נכנסות כלל.</p>
           </div>
         </div>
       </div>
@@ -1048,6 +1059,21 @@ async function toggleBot(active) {
   } catch (e) { console.error('Toggle error:', e); }
 }
 
+async function toggleAI(enabled) {
+  try {
+    const res = await fetch('/api/app/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aiEnabled: enabled }) });
+    if (res.ok) {
+      const s = document.getElementById('aiStatusText');
+      if (s) { s.textContent = enabled ? 'שירות AI פעיל' : 'שירות AI כבוי'; }
+      const toggle = document.getElementById('aiToggleSettings');
+      if (toggle) {
+        toggle.checked = enabled;
+        toggle.nextElementSibling.style.background = enabled ? '#3b82f6' : '#333';
+      }
+    }
+  } catch (e) { console.error('AI Toggle error:', e); }
+}
+
 function switchView(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -1267,7 +1293,7 @@ function showScenario(index) {
   customBtn.onclick = () => {
     const input = document.getElementById('teachingInput');
     input.focus();
-    input.placeholder = 'כתוב איך היית עונה ל"' + scenario.customer + '"...';
+    input.placeholder = 'כת��ב איך היית עונה ל"' + scenario.customer + '"...';
     input.dataset.scenarioIndex = index;
   };
   chipsDiv.appendChild(customBtn);
@@ -1941,13 +1967,17 @@ async function loadKnowledgeDocuments() {
     }
 
     listDiv.innerHTML = data.documents.map(function(doc) {
+      const chunkCount = doc.chunk_count || doc.chunks || 0;
+      const filename = doc.filename || '';
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;margin-bottom:6px">' +
         '<div style="display:flex;align-items:center;gap:8px">' +
           '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>' +
-          '<span style="color:#ccc;font-size:13px">' + escapeHtmlJS(doc.filename) + '</span>' +
-          '<span style="color:#555;font-size:11px">(' + doc.chunks + ' chunks)</span>' +
+          '<span style="color:#ccc;font-size:13px">' + escapeHtmlJS(filename) + '</span>' +
+          '<span style="color:#555;font-size:11px">(' + chunkCount + ' chunks)</span>' +
         '</div>' +
-        '<button onclick="deleteKnowledgeDocument(\\'' + escapeHtmlJS(doc.document_id) + '\\')" style="background:none;border:none;color:#555;cursor:pointer;font-size:14px;padding:4px 8px" title="מחק">x</button>' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<button onclick="deleteKnowledgeDocument(\\'' + escapeHtmlJS(filename) + '\\')" style="background:none;border:none;color:#555;cursor:pointer;font-size:14px;padding:4px 8px" title="מחק">x</button>' +
+        '</div>' +
       '</div>';
     }).join('');
   } catch (e) {
@@ -1955,17 +1985,22 @@ async function loadKnowledgeDocuments() {
   }
 }
 
-async function deleteKnowledgeDocument(documentId) {
+async function deleteKnowledgeDocument(filename) {
   if (!confirm('האם למחוק את הקובץ הזה?')) return;
   
   try {
-    const res = await fetch(AI_SERVICE_URL + '/documents/tenant_' + TENANT_ID + '/' + encodeURIComponent(documentId), {
+    const res = await fetch(AI_SERVICE_URL + '/documents/tenant_' + TENANT_ID + '/' + encodeURIComponent(filename), {
       method: 'DELETE'
     });
     if (!res.ok) {
       const data = await res.json();
       throw new Error(data.detail || 'Delete failed');
     }
+    loadKnowledgeDocuments();
+  } catch (e) {
+    alert('שגיאה במחיקת הקובץ: ' + e.message);
+  }
+}
     loadKnowledgeDocuments();
   } catch (e) {
     alert('שגיאה במחיקת הקובץ: ' + e.message);

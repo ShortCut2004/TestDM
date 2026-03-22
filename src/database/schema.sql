@@ -128,6 +128,9 @@ ALTER TABLE tenants ADD COLUMN IF NOT EXISTS max_bot_messages INTEGER DEFAULT NU
 -- Custom system prompt for AI microservice (RAG-based conversations)
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS system_prompt TEXT DEFAULT '';
 
+-- AI service enable/disable toggle (default OFF - user must explicitly enable)
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS ai_enabled BOOLEAN DEFAULT false;
+
 -- Knowledge base entries (training data, SOPs, rules)
 CREATE TABLE IF NOT EXISTS knowledge_base (
   id TEXT PRIMARY KEY,
